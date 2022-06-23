@@ -1,6 +1,5 @@
 #include <Wire.h>
 // Similar to https://github.com/Levi--G/IMU-WhoAmIVerifier except for Arduinos instead of ESP's.
-// Supported IMUs are the more common ones from Invensense
 
 //Do be aware that MPU9150's will report as 6050s, this is because a 9150 is a 6050 with a magnetometer
 //if you have a 9250 board and it reports as a 6050, it's most likely a 9150.
@@ -10,13 +9,36 @@
 
 //Curently supported ones are:
 
-//MPU6050           //ICM20608
-//MPU6500           //ICM20609
-//MPU9250           //ICM20649
-//MPU9255           //ICM20690
-//ICM20600          //ICM20648
-//ICM20601          //ICM20649
-//ICM20602          //ICM20948
+//MPU3050           //ICM20649
+//MPU6050           //ICG20660
+//MPU6500           //IAM20680
+//MPU9250           //IAM20680HP
+//MPU9255           //ICM20689
+//ICG20330          //ICM20690
+//IAM20380          //ICM20948
+//IAM20381          //ICM40627 
+//ICM20600          //IIM42351
+//ICM20601          //IIM42352
+//ICM20602          //ICM42605 
+//ICM20608-G        //IIM42652  
+//ICM20609          //ICM42670-P
+//ICM20648          //ICM42688-V
+
+
+uint8_t Addresses[2] = {0x68, 0x69};
+uint8_t ADOState[2] = {0, 1};
+
+uint8_t Registers[2] = {0x75, 0x00};
+
+uint8_t WhoamIsReg1[25] = {0x68     , 0x70     , 0x71     , 0x73     , 0x11      , 0xAC      , 0x12      , 0xAF        , 0xA6      , 0x98      , 0x20      , 0x4E      , 0x42      , 0x67        , 0xDB        , 0x47        , 0x91      , 0x92       , 0xB5      , 0xB6       , 0xA9      , 0xF8        , 0x6F      , 0x6C      , 0x6D};
+String  IMUNameReg1[25] = {"MPU6050", "MPU6500", "MPU9250", "MPU9255", "ICM20600", "ICM20601", "ICM20602", "ICM20608-G", "ICM20609", "ICM20689", "ICM20690", "ICM40627", "ICM42605", "ICM42670-P", "ICM42688-V", "ICM42688-P", "ICG20660", "ICG20330" , "IAM20380", "IAM20381" , "IAM20680", "IAM20680HP", "IIM42652", "IIM42351", "IIM42352"};
+String  IMUCapbReg1[25] = {"3A,3G"  , "3A,3G"  , "3A,3G,3M", "3A,3G,3M", "3A,3G" , "3A,3G"   , "3A,3G"   , "3A,3G"     , "3A,3G"   , "3A,3G"   , "3A,3G"   , "3A,3G"   , "3A,3G"   , "3A,3G"     , "3A,3G"     , "3A,3G"     , "3A,3G"   , "3G"       , "3A"      , "3G"       , "3A,3G"   , "3A,3G"     , "3A,3G"   , "3A"      , "3A"};
+
+uint8_t WhoamIsReg2[4] = {0xE0      , 0xE1      , 0xEA      , 0x68                                                        ,};
+String  IMUNameReg2[4] = {"ICM20648", "ICM20649", "ICM20948", "(IXZ2510/IDG-2020/IDG-2021/IXZ-2020/IXZ-2020) or (MPU3050)",};
+String  IMUCapbReg2[4] = {"3A,3G"   , "3A,3G"   , "3A,3G,3M", "(2G) or (3G)"                                              ,};
+
+bool detected = false;
 
 void setup() {
   pinMode(4, INPUT_PULLUP);
@@ -30,252 +52,45 @@ void loop() {
   static int a = 0;
   while (digitalRead(4) && a != 0) ;   //do once
   a = 1;
-
-  switch (readByte(0x68, 0x75)) {
-    case 0x68:
-      Serial.println("IMU Detected: MPU6050, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x70:
-      Serial.println("IMU Detected: MPU6500, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x71:
-      Serial.println("IMU Detected: MPU9250, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer, 3 Axis Magnetometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x73:
-      Serial.println("IMU Detected: MPU9255, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer, 3 Axis Magnetometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x11:
-      Serial.println("IMU Detected: ICM20600, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xAC:
-      Serial.println("IMU Detected: ICM20601, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x12:
-      Serial.println("IMU Detected: ICM20602, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xAF:
-      Serial.println("IMU Detected: ICM20608, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xA6:
-      Serial.println("IMU Detected: ICM20609, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x98:
-      Serial.println("IMU Detected: ICM20689, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x20:
-      Serial.println("IMU Detected: ICM20690, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xFF:
-      break;
-    default:
-      Serial.print("Unknown: 0x");
-      Serial.println(readByte(0x69, 0x00), HEX);
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
+  detected = false;
+  for (int i = 0; i < sizeof(Addresses); i++) {
+    for (int j = 0; j < sizeof(WhoamIsReg1); j++) {
+      if (readByte(Addresses[i], Registers[0]) == WhoamIsReg1[j]) {
+        Serial.print("IMU Detected: ");
+        Serial.print(IMUNameReg1[j]);
+        Serial.print(" On address: 0x");
+        Serial.print(Addresses[i], HEX);
+        Serial.print(" (ADO=");
+        Serial.print(ADOState[i]);
+        Serial.print("), WhoAmI = 0x");
+        Serial.print(WhoamIsReg1[j], HEX);
+        Serial.print(" IMU Has the following axis: ");
+        Serial.println(IMUCapbReg1[j]);
+        Serial.println("----------------------------------");
+        detected = true;
+      }
+    }
+    for (int j = 0; j < sizeof(WhoamIsReg2); j++) {
+      if (readByte(Addresses[i], Registers[0]) == WhoamIsReg2[j]) {
+        Serial.print("IMU Detected: ");
+        Serial.print(IMUNameReg2[j]);
+        Serial.print(" On address: 0x");
+        Serial.print(Addresses[i], HEX);
+        Serial.print(" (ADO=");
+        Serial.print(ADOState[i]);
+        Serial.print("), WhoAmI = 0x");
+        Serial.print(WhoamIsReg2[j], HEX);
+        Serial.print(" IMU Has the following axis: ");
+        Serial.println(IMUCapbReg2[j]);
+        Serial.println("----------------------------------");
+        detected = true;
+      }
+    }
   }
-
-  switch (readByte(0x68, 0x00)) {
-    case 0xE0:
-      Serial.println("IMU Detected: ICM20648, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xE1:
-      Serial.println("IMU Detected: ICM20649, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xEA:
-      Serial.println("IMU Detected: ICM20948, ADO = 0");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer, 3 Axis Magnetometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xFF:
-      break;
-    default:
-      Serial.print("Unknown: 0x");
-      Serial.println(readByte(0x69, 0x00), HEX);
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
+  if (!detected) {
+    Serial.println("No IMU detected");
   }
-
-  switch (readByte(0x69, 0x75)) {
-    case 0x68:
-      Serial.println("IMU Detected: MPU6050, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x70:
-      Serial.println("IMU Detected: MPU6500, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x71:
-      Serial.println("IMU Detected: MPU9250, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer, 3 Axis Magnetometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x73:
-      Serial.println("IMU Detected: MPU9255, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer, 3 Axis Magnetometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x11:
-      Serial.println("IMU Detected: ICM20600, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xAC:
-      Serial.println("IMU Detected: ICM20601, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x12:
-      Serial.println("IMU Detected: ICM20602, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xAF:
-      Serial.println("IMU Detected: ICM20608, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xA6:
-      Serial.println("IMU Detected: ICM20609, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x98:
-      Serial.println("IMU Detected: ICM20689, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0x20:
-      Serial.println("IMU Detected: ICM20690, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xFF:
-      break;
-    default:
-      Serial.print("Unknown: 0x");
-      Serial.println("----------------------------------");
-      Serial.println(readByte(0x69, 0x00), HEX);
-      delay(2000);
-      return;
-      break;
-  }
-  switch (readByte(0x69, 0x00)) {
-    case 0xE0:
-      Serial.println("IMU Detected: ICM20648, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xE1:
-      Serial.println("IMU Detected: ICM20649, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xEA:
-      Serial.println("IMU Detected: ICM20948, ADO = 1");
-      Serial.println("3 Axis Gyro, 3 Axis Accelerometer, 3 Axis Magnetometer");
-      Serial.println("----------------------------------");
-      delay(2000);
-      return;
-      break;
-    case 0xFF:
-      Serial.println("No IMU detected");
-      delay(2000);
-      break;
-    default:
-      Serial.print("Unknown: 0x");
-      Serial.println("----------------------------------");
-      Serial.println(readByte(0x69, 0x00), HEX);
-      delay(2000);
-      return;
-      break;
-  }
-
+  delay(1000);
 }
 
 uint8_t readByte(uint8_t address, uint8_t subAddress)
@@ -288,3 +103,39 @@ uint8_t readByte(uint8_t address, uint8_t subAddress)
   data = Wire.read();                      // Fill Rx buffer with result
   return data;                             // Return data read from slave register
 }
+
+//switch (readByte(0x68, 0x00)) {
+//      case 0xE0:
+//        Serial.print("IMU Detected: ICM20648, ADO = ");
+//        Serial.println(ADOState[i]);
+//        Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
+//        Serial.println("----------------------------------");
+//        delay(2000);
+//        return;
+//        break;
+//      case 0xE1:
+//        Serial.print("IMU Detected: ICM20649, ADO = ");
+//        Serial.println(ADOState[i]);
+//        Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
+//        Serial.println("----------------------------------");
+//        delay(2000);
+//        return;
+//        break;
+//      case 0xEA:
+//        Serial.print("IMU Detected: ICM20948, ADO = ");
+//        Serial.println(ADOState[i]);
+//        Serial.println("3 Axis Gyro, 3 Axis Accelerometer, 3 Axis Magnetometer");
+//        Serial.println("----------------------------------");
+//        delay(2000);
+//        return;
+//        break;
+//      case 0xFF:
+//        break;
+//      default:
+//        Serial.print("Unknown: 0x");
+//        Serial.println(readByte(Addresses[i], 0x00), HEX);
+//        Serial.println("----------------------------------");
+//        delay(2000);
+//        return;
+//        break;
+//    }
