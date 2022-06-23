@@ -103,39 +103,3 @@ uint8_t readByte(uint8_t address, uint8_t subAddress)
   data = Wire.read();                      // Fill Rx buffer with result
   return data;                             // Return data read from slave register
 }
-
-//switch (readByte(0x68, 0x00)) {
-//      case 0xE0:
-//        Serial.print("IMU Detected: ICM20648, ADO = ");
-//        Serial.println(ADOState[i]);
-//        Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-//        Serial.println("----------------------------------");
-//        delay(2000);
-//        return;
-//        break;
-//      case 0xE1:
-//        Serial.print("IMU Detected: ICM20649, ADO = ");
-//        Serial.println(ADOState[i]);
-//        Serial.println("3 Axis Gyro, 3 Axis Accelerometer");
-//        Serial.println("----------------------------------");
-//        delay(2000);
-//        return;
-//        break;
-//      case 0xEA:
-//        Serial.print("IMU Detected: ICM20948, ADO = ");
-//        Serial.println(ADOState[i]);
-//        Serial.println("3 Axis Gyro, 3 Axis Accelerometer, 3 Axis Magnetometer");
-//        Serial.println("----------------------------------");
-//        delay(2000);
-//        return;
-//        break;
-//      case 0xFF:
-//        break;
-//      default:
-//        Serial.print("Unknown: 0x");
-//        Serial.println(readByte(Addresses[i], 0x00), HEX);
-//        Serial.println("----------------------------------");
-//        delay(2000);
-//        return;
-//        break;
-//    }
